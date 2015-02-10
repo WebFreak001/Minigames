@@ -27,8 +27,8 @@ public class PVPScoreboard {
 	
 	public void draw(Screen screen)
 	{
-		screen.renderSprite((int)screen.getDimension().getWidth() / 2 - 8, 4, (players[0] % 10) * 6, 0, 8, 6, numbers);
-		screen.renderSprite((int)screen.getDimension().getWidth() / 2 + 2, 4, (players[1] % 10) * 6, 0, 8, 6, numbers);
+		screen.renderSprite((int)screen.getDimension().getWidth() / 2 - 8, 4, (players[0] % 10) * 6, 0, 6, 8, numbers);
+		screen.renderSprite((int)screen.getDimension().getWidth() / 2 + 2, 4, (players[1] % 10) * 6, 0, 6, 8, numbers);
 	}
 	
 	public int get(int player)

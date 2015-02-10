@@ -53,13 +53,15 @@ public class Screen {
         if (endX > (sprite.getDimension().getWidth() - startX)) endX =
                 ((int) sprite.getDimension().getWidth()
                         - startX);
-        if (endY > (sprite.getDimension().getWidth() - startX)) endY =
+        if (endY > (sprite.getDimension().getHeight() - startY)) endY =
                 ((int) sprite.getDimension().getHeight()
-                        - startX);
+                        - startY);
 
 
-        for (int i = startX; i < startX + endY; i++) {
-            for (int j = startY; j < startY + endX; j++) {
+        for (int i = startX; i < startX + endX; i++) {
+            for (int j = startY; j < startY + endY; j++) {
+            	if(i >= spriteImage.getWidth() || i < 0 || j >= spriteImage.getHeight() || j < 0)
+            		continue;
                 int pixelColor = spriteImage.getRGB(i, j);
                 if (pixelColor != sprite.getTransparentColor()) {
                     this.setPixel(x + (i - startX), y + (j - startY),

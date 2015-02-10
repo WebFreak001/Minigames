@@ -7,6 +7,8 @@ public class PongBall {
 
 	private float x, y, width, height;
 	private float xVelocity, yVelocity;
+	
+	final double speedIncrease = 1.1;
 
 	private int lastHitColor = 0xE0E0E0;
 	private int boundsX, boundsY;
@@ -88,8 +90,8 @@ public class PongBall {
 	}
 
 	public int update(PongPlayer player1, PongPlayer player2, double delta) {
-		x += xVelocity * delta * (7 + bounces);
-		y += yVelocity * delta * (7 + bounces);
+		x += xVelocity * delta * 5 * Math.pow(speedIncrease, bounces);
+		y += yVelocity * delta * 5 * Math.pow(speedIncrease, bounces);
 
 		if (x + width <= 0) {
 			bounces = 0;
@@ -118,8 +120,8 @@ public class PongBall {
 						.getY() + player1.getHeight()),
 				getMedianLeft(),
 				getMedianLeft().copy().add(
-						new Vector2d(xVelocity * delta * (8 + bounces),
-								yVelocity * delta * (8 + bounces))), reflect)) {
+						new Vector2d(xVelocity * delta * 7 * Math.pow(speedIncrease, bounces),
+								yVelocity * delta * 7 * Math.pow(speedIncrease, bounces))), reflect)) {
 			reflectBall(reflect, player1);
 		} else if (intersects(
 				new Vector2d(player1.getX() + player1.getWidth(),
@@ -128,8 +130,8 @@ public class PongBall {
 						.getY() + player1.getHeight()),
 				getTopLeft(),
 				getTopLeft().copy().add(
-						new Vector2d(xVelocity * delta * (7 + bounces),
-								yVelocity * delta * (7 + bounces))), reflect)
+						new Vector2d(xVelocity * delta * 6 * Math.pow(speedIncrease, bounces),
+								yVelocity * delta * 6 * Math.pow(speedIncrease, bounces))), reflect)
 				|| intersects(
 						new Vector2d(player1.getX() + player1.getWidth(),
 								player1.getY()),
@@ -137,8 +139,8 @@ public class PongBall {
 								player1.getY() + player1.getHeight()),
 						getBottomLeft(),
 						getBottomLeft().copy().add(
-								new Vector2d(xVelocity * delta * (7 + bounces),
-										yVelocity * delta * (7 + bounces))),
+								new Vector2d(xVelocity * delta * 6 * Math.pow(speedIncrease, bounces),
+										yVelocity * delta * 6 * Math.pow(speedIncrease, bounces))),
 						reflect)) {
 			reflectBall(reflect, player1);
 		}
@@ -149,8 +151,8 @@ public class PongBall {
 						+ player2.getHeight()),
 				getMedianRight(),
 				getMedianRight().copy().add(
-						new Vector2d(xVelocity * delta * (8 + bounces),
-								yVelocity * delta * (8 + bounces))), reflect)) {
+						new Vector2d(xVelocity * delta * 7 * Math.pow(speedIncrease, bounces),
+								yVelocity * delta * 7 * Math.pow(speedIncrease, bounces))), reflect)) {
 			reflectBall(reflect, player2);
 		} else if (intersects(
 				new Vector2d(player2.getX(), player2.getY()),
@@ -158,16 +160,16 @@ public class PongBall {
 						+ player2.getHeight()),
 				getTopRight(),
 				getTopRight().copy().add(
-						new Vector2d(xVelocity * delta * (7 + bounces),
-								yVelocity * delta * (7 + bounces))), reflect)
+						new Vector2d(xVelocity * delta * 6 * Math.pow(speedIncrease, bounces),
+								yVelocity * delta * 6 * Math.pow(speedIncrease, bounces))), reflect)
 				|| intersects(
 						new Vector2d(player2.getX(), player2.getY()),
 						new Vector2d(player2.getX(), player2.getY()
 								+ player2.getHeight()),
 						getBottomRight(),
 						getBottomRight().copy().add(
-								new Vector2d(xVelocity * delta * (7 + bounces),
-										yVelocity * delta * (7 + bounces))),
+								new Vector2d(xVelocity * delta * 6 * Math.pow(speedIncrease, bounces),
+										yVelocity * delta * 6 * Math.pow(speedIncrease, bounces))),
 						reflect)) {
 			reflectBall(reflect, player2);
 		}
