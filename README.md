@@ -2,3 +2,4 @@ Java Minigame collection for school made using technocf's [Eggine](https://githu
 
 Currently implemented Minigames:
 * Pong
+* Snake
