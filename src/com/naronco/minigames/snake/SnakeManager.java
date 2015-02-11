@@ -15,20 +15,15 @@ public class SnakeManager
     private Vector<Vector2d> lastSnakePos;
     private int              dir     = 0;
     private int              lastDir = 0;
-    private int              length  = 1;
+    private int              length  = 0;
     public boolean           dead;
     
     public SnakeManager(int ticksPerStep, int width, int height)
     {
         this.ticksPerStep = ticksPerStep;
-        currentTick = 0;
         random = new Random();
         field = new int[width][height];
-        snakePos = new Vector2d(width / 2, height / 2);
-        lastSnakePos = new Vector<Vector2d>();
-        lastSnakePos.add(snakePos.copy());
-        field[width / 2][height / 2] = 1;
-        spawnFood();
+        reset();
     }
     
     public void up()
@@ -90,6 +85,7 @@ public class SnakeManager
         snakePos = new Vector2d(field.length / 2, field[0].length / 2);
         lastSnakePos = new Vector<Vector2d>();
         lastSnakePos.add(snakePos.copy());
+        currentTick = 0;
         field[field.length / 2][field[0].length / 2] = 1;
         spawnFood();
     }

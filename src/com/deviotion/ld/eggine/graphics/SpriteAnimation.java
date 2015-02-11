@@ -24,7 +24,7 @@ public class SpriteAnimation {
         this.animationFps = fps;
         this.startTile = startTile;
         this.endTile = endTile;
-        this.currentTile = 0;
+        this.currentTile = startTile;
 
         this.tiles = this.endTile - this.startTile;
     }
@@ -42,8 +42,8 @@ public class SpriteAnimation {
             this.lastTile = now;
             this.currentTile++;
 
-            if (this.currentTile > this.tiles) {
-                this.currentTile = 0;
+            if (this.currentTile > this.startTile + this.tiles) {
+                this.currentTile = this.startTile;
             }
         }
     }
