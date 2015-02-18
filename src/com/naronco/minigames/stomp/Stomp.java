@@ -2,39 +2,36 @@ package com.naronco.minigames.stomp;
 
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import com.deviotion.ld.eggine.graphics.Screen;
 import com.deviotion.ld.eggine.graphics.Sprite;
-import com.deviotion.ld.eggine.graphics.SpriteAnimation;
 import com.deviotion.ld.eggine.graphics.SpriteSheet;
 import com.deviotion.ld.eggine.math.Dimension2d;
+import com.naronco.minigames.Func;
 import com.naronco.minigames.Game;
 import com.naronco.minigames.IGame;
+import com.naronco.minigames.TcpManager;
 
 public class Stomp implements IGame
 {
-    
-    Vector<Log>     logs;
-    Game            host;
-    Random          random;
-    int             speed;
-    float           logSpeed;
-    int             time;
-    int             level;
-    SpriteAnimation sitLeft;
-    SpriteAnimation runLeft;
-    SpriteAnimation sitRight;
-    SpriteAnimation runRight;
-    Sprite          deadBunny;
-    Sprite          bg;
-    float           xa;
-    float           x;
-    boolean         looksLeft;
-    boolean         inLog;
-    ParticleSystem  particles;
-    boolean         isDead;
+    Vector<Log> logs;
+    Game        host;
+    Random      random;
+    int         speed;
+    float       logSpeed;
+    int         time;
+    int         level;
+    Sprite      bg;
+    Bunny[]     bunnies;
+    int         bunniesLen = 0;
+    Bunny       ownBunny;
     
     @Override
     public int getScale()
@@ -64,33 +61,63 @@ public class Stomp implements IGame
         logSpeed = 1;
         time = 0;
         level = 1;
-        SpriteSheet sitting = new SpriteSheet(new Sprite(new File("res/bunnies-sitting.png")), new Dimension2d(32, 32));
-        SpriteSheet running = new SpriteSheet(new Sprite(new File("res/bunnies-running.png")), new Dimension2d(32, 32));
-        sitLeft = new SpriteAnimation(sitting, 0, 1, 1);
-        runLeft = new SpriteAnimation(running, 0, 1, 12);
-        sitRight = new SpriteAnimation(sitting, 2, 3, 1);
-        runRight = new SpriteAnimation(running, 2, 3, 12);
+        final SpriteSheet sitting = new SpriteSheet(new Sprite(new File("res/bunnies-sitting.png")), new Dimension2d(32, 32));
+        final SpriteSheet running = new SpriteSheet(new Sprite(new File("res/bunnies-running.png")), new Dimension2d(32, 32));
+        final Sprite deadBunny = new Sprite(new File("res/bunnies-dead.png"));
+        
         bg = new Sprite(new File("res/bunnies-bg.png"));
-        deadBunny = new Sprite(new File("res/bunnies-dead.png"));
-        xa = 0;
-        x = 140;
-        looksLeft = false;
-        particles = new ParticleSystem();
-        isDead = false;
+        ownBunny = new Bunny(sitting, running, deadBunny);
+        
+        bunnies = new Bunny[32];
+        bunnies[0] = ownBunny;
+        bunniesLen++;
+        
+        TcpManager tcp = new TcpManager(1337);
+        tcp.start();
+        tcp.onConnection(new Func<Socket>()
+        {
+            @Override
+            public void run(Socket arg)
+            {
+                final Socket socket = arg;
+                new Thread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        System.out.println("Connection from " + socket.getRemoteSocketAddress().toString());
+                        int i = bunniesLen;
+                        bunnies[i] = new Bunny(sitting, running, deadBunny);
+                        bunniesLen++;
+                        while (true)
+                        {
+                            try
+                            {
+                                socket.getOutputStream().write(new byte[] { (byte) (bunnies[i].dead() ? 1 : 0) });
+                                byte[] position = new byte[8];
+                                socket.getInputStream().read(position, 0, 8);
+                                bunnies[i].x = ByteBuffer.wrap(position, 0, 4).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                                bunnies[i].xa = ByteBuffer.wrap(position, 4, 4).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                            }
+                            catch (IOException e)
+                            {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).start();
+            }
+        });
     }
     
     @Override
     public void draw(Screen screen)
     {
         screen.renderSprite(0, 0, bg);
-        if (isDead)
+        
+        for (Bunny bunny : bunnies)
         {
-            screen.renderSprite(Math.round(x), 126, deadBunny);
-        }
-        else
-        {
-            if (Math.abs(xa) > 0.3f) screen.renderAnimatedSprite(Math.round(x), 96, looksLeft ? runLeft : runRight);
-            else screen.renderAnimatedSprite(Math.round(x), 96, looksLeft ? sitLeft : sitRight);
+            if (bunny != null) bunny.render(screen);
         }
         
         for (Log log : logs)
@@ -98,52 +125,12 @@ public class Stomp implements IGame
             log.draw(screen);
         }
         
-        particles.update();
-        particles.draw(screen);
-        
-        if (!isDead)
+        for (Bunny bunny : bunnies)
         {
-            if (host.getKeyboard().isPressed(KeyEvent.VK_LEFT))
-            {
-                boolean willCollide = false;
-                for (Log log : logs)
-                {
-                    if (log.collides(x - 4))
-                    {
-                        willCollide = true;
-                    }
-                }
-                if (!willCollide)
-                {
-                    xa -= 1.1f;
-                    looksLeft = true;
-                }
-            }
-            if (host.getKeyboard().isPressed(KeyEvent.VK_RIGHT))
-            {
-                boolean willCollide = false;
-                for (Log log : logs)
-                {
-                    if (log.collides(x + 4))
-                    {
-                        willCollide = true;
-                    }
-                }
-                if (!willCollide)
-                {
-                    xa += 1.1f;
-                    looksLeft = false;
-                }
-            }
-            xa *= 0.8f;
-            x += xa;
+            if (bunny != null) bunny.renderParticles(screen);
         }
-    }
-    
-    public void kill()
-    {
-        particles.spawn((int) x, 128, 30);
-        isDead = true;
+        
+        ownBunny.move(logs, host.getKeyboard().isPressed(KeyEvent.VK_LEFT), host.getKeyboard().isPressed(KeyEvent.VK_RIGHT));
     }
     
     @Override
@@ -153,13 +140,9 @@ public class Stomp implements IGame
         {
             log.update();
             
-            if (log.collides(x))
+            for (Bunny bunny : bunnies)
             {
-                xa = 0;
-                if (log.isDeadly())
-                {
-                    kill();
-                }
+                if (bunny != null) bunny.checkLog(log);
             }
         }
         
@@ -168,10 +151,10 @@ public class Stomp implements IGame
             logs.get(random.nextInt(logs.size())).stomp(Math.round(logSpeed));
         }
         
-        sitLeft.nextFrame();
-        runLeft.nextFrame();
-        sitRight.nextFrame();
-        runRight.nextFrame();
+        for (Bunny bunny : bunnies)
+        {
+            if (bunny != null) bunny.update();
+        }
         
         if (time > 200 + Math.pow(level, 2) * 20)
         {
