@@ -56,7 +56,7 @@ public class Bunny
     
     void move(Vector<Log> logs, boolean left, boolean right)
     {
-        if (left ^ right)
+        if (left ^ right && !isDead)
         {
             if (left)
             {

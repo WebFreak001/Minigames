@@ -88,8 +88,6 @@ public abstract class Loop {
 
                 this.frames = 0;
                 this.updates = 0;
-
-                System.out.println("FPS: " + this.fps + ", UPS: " + this.ups);
             }
         }
     }

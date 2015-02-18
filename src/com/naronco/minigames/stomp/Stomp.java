@@ -32,6 +32,7 @@ public class Stomp implements IGame
     Bunny[]     bunnies;
     int         bunniesLen = 0;
     Bunny       ownBunny;
+    boolean     started    = false;
     
     @Override
     public int getScale()
@@ -89,15 +90,40 @@ public class Stomp implements IGame
                         int i = bunniesLen;
                         bunnies[i] = new Bunny(sitting, running, deadBunny);
                         bunniesLen++;
+                        try
+                        {
+                            socket.getOutputStream().write(ByteBuffer.allocate(8).putInt(0, logs.size()).putInt(4, bunnies.length).array());
+                        }
+                        catch (IOException e1)
+                        {
+                            e1.printStackTrace();
+                        }
                         while (true)
                         {
                             try
                             {
                                 socket.getOutputStream().write(new byte[] { (byte) (bunnies[i].dead() ? 1 : 0) });
-                                byte[] position = new byte[8];
-                                socket.getInputStream().read(position, 0, 8);
+                                socket.getOutputStream().write(ByteBuffer.allocate(4).putInt(0, speed).array());
+                                for (Log log : logs)
+                                {
+                                    socket.getOutputStream().write(ByteBuffer.allocate(13).putInt(0, log.x).putInt(4, log.y).putInt(8, log.delay).put(12, (byte) ((log.stomping ? 1 : 0) | (log.goingDown ? 2 : 0))).array());
+                                }
+                                for (int x = 0; x < bunnies.length; x++)
+                                {
+                                    if (bunnies[x] == null)
+                                    {
+                                        socket.getOutputStream().write(new byte[10]);
+                                    }
+                                    else
+                                    {
+                                        socket.getOutputStream().write(ByteBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN).put(0, (byte) 1).putFloat(1, bunnies[x].x).putFloat(5, bunnies[x].xa).put(9, (byte) ((bunnies[x].looksLeft ? 1 : 0) | (bunnies[x].isDead ? 2 : 0))).array());
+                                    }
+                                }
+                                byte[] position = new byte[9];
+                                socket.getInputStream().read(position);
                                 bunnies[i].x = ByteBuffer.wrap(position, 0, 4).order(ByteOrder.LITTLE_ENDIAN).getFloat();
                                 bunnies[i].xa = ByteBuffer.wrap(position, 4, 4).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                                bunnies[i].looksLeft = position[8] == 1;
                             }
                             catch (IOException e)
                             {
@@ -130,6 +156,9 @@ public class Stomp implements IGame
             if (bunny != null) bunny.renderParticles(screen);
         }
         
+        if(host.getKeyboard().isPressed(KeyEvent.VK_SPACE))
+            started = true;
+        
         ownBunny.move(logs, host.getKeyboard().isPressed(KeyEvent.VK_LEFT), host.getKeyboard().isPressed(KeyEvent.VK_RIGHT));
     }
     
@@ -146,29 +175,32 @@ public class Stomp implements IGame
             }
         }
         
-        if (random.nextInt(speed) == 0)
-        {
-            logs.get(random.nextInt(logs.size())).stomp(Math.round(logSpeed));
-        }
-        
         for (Bunny bunny : bunnies)
         {
             if (bunny != null) bunny.update();
         }
         
-        if (time > 200 + Math.pow(level, 2) * 20)
+        if (started)
         {
-            if (speed > 12)
+            if (random.nextInt(speed) == 0)
             {
-                System.out.println("Level Up!");
-                logSpeed += 0.5f;
-                speed--;
-                level++;
-                time = 0;
+                logs.get(random.nextInt(logs.size())).stomp(Math.round(logSpeed));
             }
+            
+            if (time > 200 + Math.pow(level, 2) * 20)
+            {
+                if (speed > 12)
+                {
+                    System.out.println("Level Up!");
+                    logSpeed += 0.5f;
+                    speed--;
+                    level++;
+                    time = 0;
+                }
+            }
+            
+            time++;
         }
-        
-        time++;
     }
     
 }
