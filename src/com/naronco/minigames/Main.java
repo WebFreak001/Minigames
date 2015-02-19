@@ -7,17 +7,16 @@ import javax.swing.JOptionPane;
 import com.naronco.minigames.pong.Pong;
 import com.naronco.minigames.snake.Snake;
 import com.naronco.minigames.stomp.Stomp;
-import com.naronco.minigames.stomp.StompClient;
 
 public class Main {
 	public static void main(String[] args) throws Exception {
+	    new LobbyManager();
 	    Vector<IGame> games = new Vector<IGame>();
         games.add(new Pong());
         games.add(new Snake());
         games.add(new Stomp());
-        games.add(new StompClient());
         
-        Object[] gameNames = { "Pong", "Snake", "Stomp", "Stomp (Join Server)" };
+        Object[] gameNames = { "Pong", "Snake", "Stomp" };
         int i = -1;
         
         if (gameNames.length != 1) {
